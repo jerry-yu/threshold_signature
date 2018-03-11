@@ -1,9 +1,13 @@
-use ::public;
+use ::public::Polynomial;
 
 struct Client {
-    polynomial: public::Polynomial,
+    polynomial: Polynomial,
 }
 
 impl Client {
-
+    fn new(order: i32) -> Client {
+        Client { polynomial: Polynomial::new(order)}
+    }
 }
+
+

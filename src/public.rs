@@ -21,7 +21,7 @@ pub struct Polynomial {
 }
 
 impl Polynomial {
-    fn new(_order: i32) -> Polynomial {
+    pub fn new(_order: i32) -> Polynomial {
         Polynomial{ order: _order, coef: utility::coef_gen(_order)}
     }
 }
