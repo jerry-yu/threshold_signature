@@ -1,0 +1,8 @@
+[package]
+name = "threshold-signature"
+version = "0.1.0"
+authors = ["Gao Bicheng <volz.kz.g@gmail.com>"]
+
+[dependencies]
+bn = "0.4.3"
+rand = "0.4"
