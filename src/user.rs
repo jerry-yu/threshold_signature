@@ -1,7 +1,9 @@
-struct client {
-    polynomial: Polynomial,
+use ::public;
+
+struct Client {
+    polynomial: public::Polynomial,
 }
 
-impl client {
-    
+impl Client {
+
 }
