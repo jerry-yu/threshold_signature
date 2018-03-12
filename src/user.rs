@@ -1,13 +1,21 @@
 use ::public::Polynomial;
+use ::bn::{Fr, G1, G2, Group};
 
-struct Client {
+pub struct Client {
+    id: i32,
     polynomial: Polynomial,
 }
 
 impl Client {
-    fn new(order: i32) -> Client {
-        Client { polynomial: Polynomial::new(order)}
+    pub fn new(_id: i32, _order: i32) -> Client {
+        Client { id: _id, polynomial: Polynomial::new(_order)}
+    }
+
+    pub fn broadcast(&mut self) -> Vec<G2> {
+        let mut ret: Vec<G2> = Vec::new();
+        for value in &self.polynomial.coef {
+            ret.push(G2::one() * *value);
+        }
+        ret
     }
 }
-
-
