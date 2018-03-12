@@ -9,7 +9,7 @@ use threshold_signature::public;
 fn main() {
     let n = 10;
     let t = 5;
-
+    let rng = &mut rand::thread_rng();
     // create the vector of n users
     let mut clients: Vec<Client> = Vec::new();
     for i in 0..n {
@@ -21,6 +21,8 @@ fn main() {
         client.verify(&mut message_pool);
     }
     message_pool.get_qual_usr(&mut clients);
+    let hashed_message = G1::random(rng);
+    message_pool.get_signature(&hashed_message, &mut clients);
 }
 
 #[cfg(test)]

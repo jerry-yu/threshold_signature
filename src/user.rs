@@ -108,4 +108,8 @@ impl Client {
             ik = ik * i_fr;
         }
     }
+
+    pub fn get_signature(&mut self, hashed_message: &G1) -> G1 {
+        *hashed_message * self.sk
+    }
 }

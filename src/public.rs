@@ -17,7 +17,7 @@ pub mod utility {
     }
 }
 
-use bn::{Fr, G1, G2, Group};
+use bn::{Fr, G1, G2, Group, pairing};
 
 pub struct Polynomial {
     pub order: i32,
@@ -108,7 +108,22 @@ impl MessagePool {
         }
 
         // calc public key and secret key for clients
-        
     }
 
+    pub fn get_signature(&mut self, hashed_message: &G1, clients: &mut Vec<::user::Client>) {
+        let mut signatures: Vec<G1> = Vec::new();
+        for i in self.qual_usr.iter() {
+            let sig = clients[*i as usize].get_signature(hashed_message);
+            // verification
+            let lhs = pairing(sig, G2::one());
+            let rhs = pairing(*hashed_message, clients[*i as usize].pk);
+            assert!(lhs == rhs);
+
+            signatures.push(sig);
+        }
+        // let mut lhs =
+        // for i in 0..t {
+
+        // }
+    }
 }
