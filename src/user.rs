@@ -11,7 +11,7 @@ impl Client {
         Client { id: _id, polynomial: Polynomial::new(_order)}
     }
 
-    pub fn broadcastA(&mut self) -> Vec<G2> {
+    pub fn broadcast_a(&mut self) -> Vec<G2> {
         let mut ret: Vec<G2> = Vec::new();
         for value in &self.polynomial.coef {
             ret.push(G2::one() * *value);
@@ -19,27 +19,44 @@ impl Client {
         ret
     }
 
-    pub fn broadcastS(&mut self, _n: i32) -> Vec<Fr> {
+    pub fn broadcast_s(&mut self, _n: i32) -> Vec<Fr> {
         let mut ret: Vec<Fr> = Vec::new();
         for j in 0.._n {
+            // user = i, reciver = j
+            // S_{ij} = P_{i}(j) = \sum_{k=0}{t-1}(a_{ik}j^{k})
             let s: String = j.to_string();
             let j_fr: Fr = Fr::from_str(&s).unwrap();
-            let mut rhs = Fr::one();
+            let mut jk = Fr::one();
             let mut res = Fr::zero();
             for value in &self.polynomial.coef {
-                res = res + *value * rhs;
-                rhs = rhs * j_fr;
+                res = res + *value * jk;
+                jk = jk * j_fr;
             }
             ret.push(res);
         }
         ret
     }
 
-    // pub fn verify(&self, message_pool: &::public::MessagePool) {
-    //     // get the information I should receive
-    //     let received_message = message_pool.get_message(&self);
-    //     // verify each one
-    //     for message in &received_message {
-    //     }
-    // }
+    pub fn verify(&self, message_pool: &mut ::public::MessagePool) {
+        // get the information I should receive
+        let received_message = message_pool.get_message(&self);
+        // verify each one
+        for j in 0..received_message.len() {
+            let lhs = G2::one() * received_message[j];
+            let mut rhs = G2::zero();
+
+            let s: String = j.to_string();
+            let j_fr: Fr = Fr::from_str(&s).unwrap();
+            let mut jk: Fr = Fr::one();
+
+            for k in 0..self.polynomial.order {
+                rhs = rhs + message_pool.A[self.id as usize][k as usize] * jk;
+                jk = jk * j_fr;
+            }
+
+            if lhs != rhs {
+                message_pool.anti_vote[j as usize].push(self.id);
+            }
+        }
+    }
 }

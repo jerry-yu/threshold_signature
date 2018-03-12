@@ -6,13 +6,6 @@ use bn::{G1, G2, Group};
 use threshold_signature::user::{Client};
 use threshold_signature::public;
 
-// fn main() {
-//     let rng0 = &mut rand::thread_rng();
-//     let rng1 = &mut rand::thread_rng();
-//     let i: bn::Fr = bn::Fr::random(rng0);
-//     let j: bn::Fr = bn::Fr::random(rng1);
-// }
-
 fn main() {
     let n = 10;
     let t = 5;
@@ -24,7 +17,39 @@ fn main() {
     }
 
     let mut message_pool = public::MessagePool::new(&mut clients, n);
-    // for client in clients {
-    //     client.verify(&message_pool);
-    // }
+    for client in clients {
+        client.verify(&mut message_pool);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ::rand;
+    use ::bn::{G1, G2, Group, Fr, pairing};
+
+    #[test]
+    fn test_for_pairing() {
+        let rng0 = &mut rand::thread_rng();
+        let rng1 = &mut rand::thread_rng();
+        let g1 = G1::one();
+        let g2 = G2::one();
+        let a = Fr::random(rng0);
+        let b = Fr::random(rng1);
+        let part0 = pairing(g1 * a, g2 * b);
+        let part1 = pairing(g1 * b, g2 * a);
+        let part2 = pairing(g1, g2).pow(a * b);
+        assert!(part0 == part1);
+        assert!(part0 == part2);
+    }
+
+    #[test]
+    fn test_for_abel() {
+        let rng0 = &mut rand::thread_rng();
+        let rng1 = &mut rand::thread_rng();
+        let i = G1::random(rng0);
+        let j = G1::random(rng1);
+        let k0 = i + j;
+        let k1 = j + i;
+        assert!(k0 == k1);
+    }
 }
