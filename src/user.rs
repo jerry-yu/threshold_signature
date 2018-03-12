@@ -103,8 +103,8 @@ impl Client {
         let i_fr: Fr = Fr::from_str(&s).unwrap();
         let mut ik = Fr::one();
         for k in 0..message_pool.t {
-            let Ak = message_pool.pk[k as usize];
-            self.pk = self.pk + Ak * i_fr;
+            let ak = message_pool.pk[k as usize];
+            self.pk = self.pk + ak * i_fr;
             ik = ik * i_fr;
         }
     }

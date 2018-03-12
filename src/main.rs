@@ -2,7 +2,7 @@ extern crate bn;
 extern crate rand;
 extern crate threshold_signature;
 
-use bn::{G1, G2, Group};
+use bn::{G1, Group};
 use threshold_signature::user::Client;
 use threshold_signature::public;
 
