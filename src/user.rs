@@ -3,7 +3,10 @@ use bn::{Fr, G1, G2, Group};
 
 pub struct Client {
     pub id: i32,
+    pub pk: G2,
+    sk: Fr,
     polynomial: Polynomial,
+
 }
 
 impl Client {
@@ -11,6 +14,8 @@ impl Client {
         Client {
             id: _id,
             polynomial: Polynomial::new(_order),
+            pk: G2::zero(),
+            sk: Fr::zero(),
         }
     }
 
@@ -84,5 +89,23 @@ impl Client {
         }
 
         lhs == rhs
+    }
+
+    pub fn calc_pk_sk(&mut self, message_pool: &mut ::public::MessagePool) {
+        self.sk = Fr::zero();
+        let received_message = message_pool.get_message(&self);
+        for i in message_pool.qual_usr.iter() {
+            self.sk = self.sk + received_message[*i as usize];
+        }
+
+        self.pk = G2::zero();
+        let s: String = self.id.to_string();
+        let i_fr: Fr = Fr::from_str(&s).unwrap();
+        let mut ik = Fr::one();
+        for k in 0..message_pool.t {
+            let Ak = message_pool.pk[k as usize];
+            self.pk = self.pk + Ak * i_fr;
+            ik = ik * i_fr;
+        }
     }
 }

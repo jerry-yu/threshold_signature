@@ -40,7 +40,8 @@ pub struct MessagePool {
     pub qual_usr: Vec<i32>,
     pub pk: Vec<G2>,
     S: Vec<Vec<Fr>>,
-    n: i32, t: i32,
+    pub n: i32,
+    pub t: i32,
 }
 
 impl MessagePool {
@@ -97,6 +98,7 @@ impl MessagePool {
             }
         }
 
+        // calc the public value
         for k in 0..self.t {
             let mut ret = G2::zero();
             for i in 0..self.qual_usr.len() {
@@ -104,6 +106,9 @@ impl MessagePool {
             }
             self.pk.push(ret);
         }
+
+        // calc public key and secret key for clients
+        
     }
 
 }
