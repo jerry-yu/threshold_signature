@@ -13,7 +13,7 @@ fn main() {
     // create the vector of n users
     let mut clients: Vec<Client> = Vec::new();
     for i in 0..n {
-        clients.push(Client::new(i, t));
+        clients.push(Client::new(i + 1, t));
     }
 
     let mut message_pool = public::MessagePool::new(&mut clients, n, t);

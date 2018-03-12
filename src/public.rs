@@ -69,7 +69,7 @@ impl MessagePool {
     pub fn get_message(&self, client: &::user::Client) -> Vec<Fr> {
         let mut ret = Vec::new();
         for message_list in &self.S {
-            ret.push(message_list[client.id as usize]);
+            ret.push(message_list[(client.id - 1) as usize]);
         }
         ret
     }
@@ -110,8 +110,44 @@ impl MessagePool {
         // calc public key and secret key for clients
     }
 
+    fn calc_lambda(&self, st: i32, ed: i32, exc: i32, signatures: &Vec<(G1, i32)>) -> Fr {
+        let mut up = Fr::one();
+        let mut down = Fr::one();
+
+        let i = signatures[exc as usize].1;
+        for k in st..ed {
+            if k == exc {
+                continue;
+            }
+            let j = signatures[k as usize].1;
+            // up
+            let mut res = 0 - j;
+            if res >= 0 {
+                let s: String = res.to_string();
+                let num = Fr::from_str(&s).unwrap();
+                up = up * num;
+            } else {
+                let s: String = (-res).to_string();
+                let num = -Fr::from_str(&s).unwrap();
+                up = up * num;
+            }
+
+            res = i - j;
+            if res >= 0 {
+                let s: String = res.to_string();
+                let num = Fr::from_str(&s).unwrap();
+                down = down * num;
+            } else {
+                let s: String = (-res).to_string();
+                let num = -Fr::from_str(&s).unwrap();
+                down = down * num;
+            }
+        }
+        up * down.inverse().unwrap()
+    }
+
     pub fn get_signature(&mut self, hashed_message: &G1, clients: &mut Vec<::user::Client>) {
-        let mut signatures: Vec<G1> = Vec::new();
+        let mut signatures: Vec<(G1, i32)> = Vec::new();
         for i in self.qual_usr.iter() {
             let sig = clients[*i as usize].get_signature(hashed_message);
             // verification
@@ -119,11 +155,18 @@ impl MessagePool {
             let rhs = pairing(*hashed_message, clients[*i as usize].pk);
             assert!(lhs == rhs);
 
-            signatures.push(sig);
+            signatures.push((sig, *i));
         }
-        // let mut lhs =
-        // for i in 0..t {
+        // calc
+        let mut lhs = G1::zero();
+        for i in 0..self.t {
+            lhs = lhs + signatures[i as usize].0 * self.calc_lambda(0, self.t, i, &signatures);
+        }
 
-        // }
+        let mut rhs = G1::zero();
+        for i in 1..(self.t + 1) {
+            rhs = rhs + signatures[i as usize].0 * self.calc_lambda(1, self.t + 1, i, &signatures);
+        }
+        assert!(lhs == rhs);
     }
 }

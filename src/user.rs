@@ -44,7 +44,7 @@ impl Client {
     pub fn broadcast_s(&mut self, _n: i32) -> Vec<Fr> {
         let mut ret: Vec<Fr> = Vec::new();
         for j in 0.._n {
-            ret.push(self.calc_secret(j));
+            ret.push(self.calc_secret(j + 1));
         }
         ret
     }
