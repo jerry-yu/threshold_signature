@@ -21,6 +21,7 @@ fn main() {
         client.verify(&mut message_pool);
     }
     message_pool.get_qual_usr(&mut clients);
+
 }
 
 #[cfg(test)]
@@ -52,5 +53,25 @@ mod tests {
         let k0 = i + j;
         let k1 = j + i;
         assert!(k0 == k1);
+    }
+
+    #[test]
+    fn test_qual_usr() {
+        let n = 10;
+        let t = 5;
+
+        // create the vector of n users
+        let mut clients: Vec<::Client> = Vec::new();
+        for i in 0..n {
+            clients.push(::Client::new(i, t));
+        }
+
+        let mut message_pool = ::public::MessagePool::new(&mut clients, n);
+        for client in clients.iter() {
+            client.verify(&mut message_pool);
+        }
+        message_pool.get_qual_usr(&mut clients);
+
+        assert!(message_pool.qual_usr.len() == n as usize)
     }
 }
