@@ -12,7 +12,7 @@ pub struct Client {
 impl Client {
     pub fn new(_id: i32, _order: i32) -> Client {
         Client {
-            id: _id,
+            id: _id + 1,
             polynomial: Polynomial::new(_order),
             pk: G2::zero(),
             sk: Fr::zero(),
