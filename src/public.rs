@@ -33,13 +33,26 @@ impl Polynomial {
 pub struct MessagePool {
     // A means the broadcast value A_{ik} = g_2^{a_{ik}}
     A: Vec<Vec<G2>>,
+    S: Vec<Vec<Fr>>,
 }
 
 impl MessagePool {
-    pub fn new(clients: &mut Vec<::user::Client>) {
-        let mut ret: Vec<Vec<G2>> = Vec::new();
+    pub fn new(clients: &mut Vec<::user::Client>, _n: i32) -> MessagePool{
+        let mut _A: Vec<Vec<G2>> = Vec::new();
+        let mut _S: Vec<Vec<Fr>> = Vec::new();
+
         for client in clients {
-            ret.push(client.broadcast());
+            _A.push(client.broadcastA());
+            _S.push(client.broadcastS(_n));
         }
+        MessagePool{ A: _A, S: _S}
+    }
+
+    pub fn get_message(&self, client: &::user::Client) -> Vec<G2>{
+        let mut ret = Vec::new();
+        for message_list in &self.A {
+            ret.push(message_list[client.id as usize]);
+        }
+        ret
     }
 }
