@@ -6,7 +6,6 @@ pub struct Client {
     pub pk: G2,
     sk: Fr,
     polynomial: Polynomial,
-
 }
 
 impl Client {

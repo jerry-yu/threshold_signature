@@ -17,7 +17,7 @@ pub mod utility {
     }
 }
 
-use bn::{Fr, G1, G2, Group, pairing};
+use bn::{pairing, Fr, G1, G2, Group};
 
 pub struct Polynomial {
     pub order: i32,
@@ -62,7 +62,8 @@ impl MessagePool {
             veto: _veto,
             qual_usr: Vec::new(),
             pk: Vec::new(),
-            n: _n, t: _t,
+            n: _n,
+            t: _t,
         }
     }
 
