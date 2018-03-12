@@ -1,5 +1,5 @@
-use ::public::Polynomial;
-use ::bn::{Fr, G1, G2, Group};
+use public::Polynomial;
+use bn::{Fr, G1, G2, Group};
 
 pub struct Client {
     pub id: i32,
@@ -8,7 +8,10 @@ pub struct Client {
 
 impl Client {
     pub fn new(_id: i32, _order: i32) -> Client {
-        Client { id: _id, polynomial: Polynomial::new(_order)}
+        Client {
+            id: _id,
+            polynomial: Polynomial::new(_order),
+        }
     }
 
     pub fn broadcast_a(&mut self) -> Vec<G2> {
@@ -19,7 +22,7 @@ impl Client {
         ret
     }
 
-    pub fn calc_secret(&mut self, to_usr: i32) -> Fr{
+    pub fn calc_secret(&mut self, to_usr: i32) -> Fr {
         // from_usr = i, to_usr = j
         // S_{ij} = P_{i}(j) = \sum_{k=0}{t-1}(a_{ik}j^{k})
         let s: String = to_usr.to_string();
@@ -50,8 +53,9 @@ impl Client {
         for from_usr in 0..received_message.len() {
             let res = self.verify_specific(
                 received_message[from_usr],
-                from_usr as i32, to_usr,
-                message_pool
+                from_usr as i32,
+                to_usr,
+                message_pool,
             );
 
             if res == false {
@@ -61,7 +65,10 @@ impl Client {
     }
 
     pub fn verify_specific(
-        &self, sk: Fr, from_usr: i32, to_usr: i32,
+        &self,
+        sk: Fr,
+        from_usr: i32,
+        to_usr: i32,
         message_pool: &::public::MessagePool,
     ) -> bool {
         let lhs = G2::one() * sk;

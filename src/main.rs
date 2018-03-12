@@ -1,9 +1,9 @@
-extern crate threshold_signature;
 extern crate bn;
 extern crate rand;
+extern crate threshold_signature;
 
 use bn::{G1, G2, Group};
-use threshold_signature::user::{Client};
+use threshold_signature::user::Client;
 use threshold_signature::public;
 
 fn main() {
@@ -21,13 +21,12 @@ fn main() {
         client.verify(&mut message_pool);
     }
     message_pool.get_qual_usr(&mut clients);
-
 }
 
 #[cfg(test)]
 mod tests {
-    use ::rand;
-    use ::bn::{G1, G2, Group, Fr, pairing};
+    use rand;
+    use bn::{pairing, Fr, G1, G2, Group};
 
     #[test]
     fn test_for_pairing() {
