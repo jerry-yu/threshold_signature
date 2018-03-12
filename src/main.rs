@@ -16,7 +16,7 @@ fn main() {
         clients.push(Client::new(i, t));
     }
 
-    let mut message_pool = public::MessagePool::new(&mut clients, n);
+    let mut message_pool = public::MessagePool::new(&mut clients, n, t);
     for client in clients.iter() {
         client.verify(&mut message_pool);
     }

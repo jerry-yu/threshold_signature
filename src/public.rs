@@ -38,16 +38,16 @@ pub struct MessagePool {
     pub A: Vec<Vec<G2>>,
     pub veto: Vec<Vec<i32>>,
     pub qual_usr: Vec<i32>,
-    pub pk: G2,
+    pub pk: Vec<G2>,
     S: Vec<Vec<Fr>>,
+    n: i32, t: i32,
 }
 
 impl MessagePool {
-    pub fn new(clients: &mut Vec<::user::Client>, _n: i32) -> MessagePool {
+    pub fn new(clients: &mut Vec<::user::Client>, _n: i32, _t: i32) -> MessagePool {
         let mut _a: Vec<Vec<G2>> = Vec::new();
         let mut _s: Vec<Vec<Fr>> = Vec::new();
         let mut _veto: Vec<Vec<i32>> = Vec::new();
-        let mut _qual_usr: Vec<i32> = Vec::new();
 
         for client in clients {
             _a.push(client.broadcast_a());
@@ -59,8 +59,9 @@ impl MessagePool {
             A: _a,
             S: _s,
             veto: _veto,
-            qual_usr: _qual_usr,
-            pk: G2::zero(),
+            qual_usr: Vec::new(),
+            pk: Vec::new(),
+            n: _n, t: _t,
         }
     }
 
@@ -95,5 +96,14 @@ impl MessagePool {
                 }
             }
         }
+
+        for k in 0..self.t {
+            let mut ret = G2::zero();
+            for i in 0..self.qual_usr.len() {
+                ret = ret + self.A[i as usize][k as usize];
+            }
+            self.pk.push(ret);
+        }
     }
+
 }
