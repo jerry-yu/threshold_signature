@@ -33,7 +33,8 @@ impl Polynomial {
 pub struct MessagePool {
     // A means the broadcast value A_{ik} = g_2^{a_{ik}}
     pub A: Vec<Vec<G2>>,
-    pub anti_vote: Vec<Vec<i32>>,
+    pub veto: Vec<Vec<i32>>,
+    pub qual_usr: Vec<i32>,
     S: Vec<Vec<Fr>>,
 }
 
@@ -41,20 +42,52 @@ impl MessagePool {
     pub fn new(clients: &mut Vec<::user::Client>, _n: i32) -> MessagePool{
         let mut _a: Vec<Vec<G2>> = Vec::new();
         let mut _s: Vec<Vec<Fr>> = Vec::new();
-        let mut _anti_vote: Vec<Vec<i32>> = Vec::new();
+        let mut _veto: Vec<Vec<i32>> = Vec::new();
+        let mut _qual_usr: Vec<i32> = Vec::new();
 
         for client in clients {
             _a.push(client.broadcast_a());
             _s.push(client.broadcast_s(_n));
-            _anti_vote.push(Vec::new());
+            _veto.push(Vec::new());
         }
-        MessagePool{ A: _a, S: _s, anti_vote: _anti_vote}
+
+        MessagePool{
+            A: _a, S: _s,
+            veto: _veto,
+            qual_usr: _qual_usr,
+        }
     }
+
     pub fn get_message(&self, client: &::user::Client) -> Vec<Fr>{
         let mut ret = Vec::new();
         for message_list in &self.S {
             ret.push(message_list[client.id as usize]);
         }
         ret
+    }
+
+    pub fn get_qual_usr(&mut self, clients: &mut Vec<::user::Client>) {
+        for to_usr in 0..self.veto.len() {
+            if self.veto[to_usr].len() == 0 as usize {
+                self.qual_usr.push(to_usr as i32);
+            } else {
+                for from_usr in self.veto[to_usr].iter() {
+                    let sk = clients[*from_usr as usize].calc_secret(to_usr as i32);
+                    let mut res = true;
+                    for _client in clients.iter() {
+                        if _client.verify_specific(
+                            sk, *from_usr as i32, to_usr as i32, self
+                        ) == false {
+                            res = false;
+                            break;
+                        }
+                    }
+
+                    if res == true {
+                        self.qual_usr.push(to_usr as i32);
+                    }
+                }
+            }
+        }
     }
 }
