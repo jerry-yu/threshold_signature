@@ -80,19 +80,17 @@ impl MessagePool {
             if self.veto[to_usr].len() == 0 as usize {
                 self.qual_usr.push(to_usr as i32);
             } else {
-                for from_usr in self.veto[to_usr].iter() {
+                for from_usr in &self.veto[to_usr] {
                     let sk = clients[*from_usr as usize].calc_secret(to_usr as i32);
                     let mut res = true;
                     for _client in clients.iter() {
-                        if _client.verify_specific(sk, *from_usr as i32, to_usr as i32, self)
-                            == false
-                        {
+                        if !_client.verify_specific(sk, *from_usr as i32, to_usr as i32, self) {
                             res = false;
                             break;
                         }
                     }
 
-                    if res == true {
+                    if res {
                         self.qual_usr.push(to_usr as i32);
                     }
                 }

@@ -17,7 +17,7 @@ fn main() {
     }
 
     let mut message_pool = public::MessagePool::new(&mut clients, n, t);
-    for client in clients.iter() {
+    for client in &clients {
         client.verify(&mut message_pool);
     }
     message_pool.get_qual_usr(&mut clients);
