@@ -1,171 +1,141 @@
-pub mod utility {
-    use bn::Fr;
-
-    pub fn coef_gen(order: i32) -> Vec<Fr> {
-        let mut ret = Vec::new();
-        let rng = &mut ::rand::thread_rng();
-        for _ in 0..order {
-            ret.push(Fr::random(rng));
-        }
-        ret
-    }
-
-    #[test]
-    fn test_coef_gen() {
-        let coef = coef_gen(10);
-        assert_eq!(coef.len(), 10 as usize);
-    }
-}
-
-use bn::{pairing, Fr, G1, G2, Group};
-
-pub struct Polynomial {
-    pub order: i32,
-    pub coef: Vec<Fr>,
-}
-
-impl Polynomial {
-    pub fn new(_order: i32) -> Polynomial {
-        Polynomial {
-            order: _order,
-            coef: utility::coef_gen(_order),
-        }
-    }
-}
+use bn::{Fr, G2, Group};
+use std::collections::BTreeMap;
 
 pub struct MessagePool {
-    // A means the broadcast value A_{ik} = g_2^{a_{ik}}
-    pub A: Vec<Vec<G2>>,
-    pub veto: Vec<Vec<i32>>,
+    // user_id_coefs means the broadcast value A_{ik} = g_2^{a_{ik}}
+    pub userid_coefs_g2: BTreeMap<i32, Vec<G2>>,
+
+    /*comment when network comunication succ,to be continue*/
+    //pub veto: BTreeMap<i32,Vec<i32>>,
     pub qual_usr: Vec<i32>,
-    pub pk: Vec<G2>,
-    S: Vec<Vec<Fr>>,
-    pub n: i32,
-    pub t: i32,
+    pub whole_coefs: Vec<G2>,
+    userid_poly_secrets: BTreeMap<i32, Fr>,
+    my_id: i32,
+    pub n: usize,
+    pub t: usize,
 }
 
 impl MessagePool {
-    pub fn new(clients: &mut Vec<::user::Client>, _n: i32, _t: i32) -> MessagePool {
-        let mut _a: Vec<Vec<G2>> = Vec::new();
-        let mut _s: Vec<Vec<Fr>> = Vec::new();
-        let mut _veto: Vec<Vec<i32>> = Vec::new();
-
-        for client in clients {
-            _a.push(client.broadcast_a());
-            _s.push(client.broadcast_s(_n));
-            _veto.push(Vec::new());
-        }
-
+    pub fn new(n: usize, t: usize, my_id: i32) -> MessagePool {
         MessagePool {
-            A: _a,
-            S: _s,
-            veto: _veto,
+            userid_coefs_g2: BTreeMap::new(),
+            userid_poly_secrets: BTreeMap::new(),
             qual_usr: Vec::new(),
-            pk: Vec::new(),
-            n: _n,
-            t: _t,
+            whole_coefs: Vec::new(),
+            my_id: my_id,
+            n: n,
+            t: t,
         }
     }
 
-    pub fn get_message(&self, client: &::user::Client) -> Vec<Fr> {
-        let mut ret = Vec::new();
-        for message_list in &self.S {
-            ret.push(message_list[(client.id - 1) as usize]);
+    pub fn get_mpk(&self) -> Option<G2> {
+        if self.whole_coefs.is_empty() {
+            return None;
         }
+        Some(self.whole_coefs[0])
+    }
+
+    pub fn set_client_id_coefs(&mut self, src_id: i32, coefs: &Vec<G2>) -> bool {
+        if coefs.len() != self.t {
+            println!("not right");
+            return false;
+        }
+        let ret = self
+            .userid_coefs_g2
+            .insert(src_id, coefs.clone())
+            .map_or_else(|| true, |_| false);
         ret
     }
 
-    pub fn get_qual_usr(&mut self, clients: &mut Vec<::user::Client>) {
-        for to_usr in 0..self.veto.len() {
-            if self.veto[to_usr].len() == 0 as usize {
-                self.qual_usr.push(to_usr as i32);
-            } else {
-                for from_usr in &self.veto[to_usr] {
-                    let sk = clients[*from_usr as usize].calc_secret(to_usr as i32);
-                    let mut res = true;
-                    for _client in clients.iter() {
-                        if !_client.verify_specific(sk, *from_usr as i32, to_usr as i32, self) {
-                            res = false;
-                            break;
-                        }
-                    }
+    pub fn set_client_id_secrets(&mut self, src_id: i32, secret: Fr) -> bool {
+        self.userid_poly_secrets
+            .insert(src_id, secret)
+            .map_or_else(|| true, |_| false)
+    }
 
-                    if res {
-                        self.qual_usr.push(to_usr as i32);
-                    }
+    /*verify $id's secret is ok or not via coefs_g2 */
+    pub fn verify(&self, id: i32) -> bool {
+        let ret = self.userid_poly_secrets.get(&id).and_then(|secret| {
+            self.userid_coefs_g2.get(&id).and_then(|coefs| {
+                let lhs = G2::one() * *secret;
+                let mut rhs = G2::zero();
+
+                let s: String = self.my_id.to_string();
+                let j_fr: Fr = Fr::from_str(&s).unwrap();
+                let mut jk: Fr = Fr::one();
+                for k in 0..self.t {
+                    rhs = rhs + coefs[k] * jk;
+                    jk = jk * j_fr;
                 }
+                Some(lhs == rhs)
+            })
+        });
+        ret.unwrap_or(false)
+    }
+
+    pub fn calc_sk(&self) -> Option<Fr> {
+        let mut sk = Fr::zero();
+        for id in self.qual_usr.iter() {
+            if let Some(one_sk) = self.userid_poly_secrets.get(id) {
+                sk = sk + *one_sk;
+            } else {
+                return None;
             }
         }
+        Some(sk)
+    }
 
+    pub fn calc_pk(&self, my_id: i32) -> Option<G2> {
+        let mut pk = G2::zero();
+        let s: String = my_id.to_string();
+        let i_fr: Fr = Fr::from_str(&s).unwrap();
+        let mut ik = Fr::one();
+        for k in 0..self.t {
+            let ak = self.whole_coefs[k];
+            pk = pk + ak * ik;
+            ik = ik * i_fr;
+        }
+        Some(pk)
+    }
+
+    pub fn cal_mpk(&self) -> Option<G2> {
+        if self.whole_coefs.is_empty() {
+            return None;
+        }
+        Some(self.whole_coefs[0])
+    }
+
+    fn clean_unqual_id(&mut self, id: i32) {
+        self.userid_coefs_g2.remove(&id);
+        self.userid_poly_secrets.remove(&id);
+    }
+
+    pub fn get_qual_usr(&mut self) -> Vec<i32> {
+        let ids: Vec<i32> = self.userid_coefs_g2.keys().cloned().collect();
+        for i in ids.iter() {
+            if self.verify(*i) {
+                self.qual_usr.push(*i);
+            } else {
+                self.clean_unqual_id(*i);
+            }
+        }
+        return self.qual_usr.clone();
+    }
+
+    pub fn calc_whole_coefs(&mut self) -> bool {
         // calc the public value
         for k in 0..self.t {
             let mut ret = G2::zero();
-            for i in 0..self.qual_usr.len() {
-                ret = ret + self.A[i as usize][k as usize];
+            for i in self.qual_usr.iter() {
+                if let Some(coefs) = self.userid_coefs_g2.get(&i) {
+                    ret = ret + coefs[k];
+                } else {
+                    println!("error for not find id coefs in id {}", i);
+                    return false;
+                }
             }
-            self.pk.push(ret);
+            self.whole_coefs.push(ret);
         }
-
-        // calc public key and secret key for clients
-    }
-
-    fn calc_lambda(&self, st: i32, ed: i32, exc: i32, signatures: &Vec<(G1, i32)>) -> Fr {
-        let mut up = Fr::one();
-        let mut down = Fr::one();
-
-        let i = signatures[exc as usize].1;
-        for k in st..ed {
-            if k == exc {
-                continue;
-            }
-            let j = signatures[k as usize].1;
-            // up
-            let mut res = 0 - j;
-            if res >= 0 {
-                let s: String = res.to_string();
-                let num = Fr::from_str(&s).unwrap();
-                up = up * num;
-            } else {
-                let s: String = (-res).to_string();
-                let num = -Fr::from_str(&s).unwrap();
-                up = up * num;
-            }
-
-            res = i - j;
-            if res >= 0 {
-                let s: String = res.to_string();
-                let num = Fr::from_str(&s).unwrap();
-                down = down * num;
-            } else {
-                let s: String = (-res).to_string();
-                let num = -Fr::from_str(&s).unwrap();
-                down = down * num;
-            }
-        }
-        up * down.inverse().unwrap()
-    }
-
-    pub fn get_signature(&mut self, hashed_message: &G1, clients: &mut Vec<::user::Client>) {
-        let mut signatures: Vec<(G1, i32)> = Vec::new();
-        for i in self.qual_usr.iter() {
-            let sig = clients[*i as usize].get_signature(hashed_message);
-            // verification
-            let lhs = pairing(sig, G2::one());
-            let rhs = pairing(*hashed_message, clients[*i as usize].pk);
-            assert!(lhs == rhs);
-
-            signatures.push((sig, *i));
-        }
-        // calc
-        let mut lhs = G1::zero();
-        for i in 0..self.t {
-            lhs = lhs + signatures[i as usize].0 * self.calc_lambda(0, self.t, i, &signatures);
-        }
-
-        let mut rhs = G1::zero();
-        for i in 1..(self.t + 1) {
-            rhs = rhs + signatures[i as usize].0 * self.calc_lambda(1, self.t + 1, i, &signatures);
-        }
-        assert!(lhs == rhs);
+        true
     }
 }
