@@ -1,12 +1,10 @@
-use bn::{Fr, G2, Group};
+use bn::{Fr, Group, G2};
 use std::collections::BTreeMap;
 
 pub struct MessagePool {
     // user_id_coefs means the broadcast value A_{ik} = g_2^{a_{ik}}
     pub userid_coefs_g2: BTreeMap<i32, Vec<G2>>,
 
-    /*comment when network comunication succ,to be continue*/
-    //pub veto: BTreeMap<i32,Vec<i32>>,
     pub qual_usr: Vec<i32>,
     pub whole_coefs: Vec<G2>,
     userid_poly_secrets: BTreeMap<i32, Fr>,

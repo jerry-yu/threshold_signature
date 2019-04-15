@@ -1,8 +1,8 @@
 [package]
 name = "threshold-signature"
 version = "0.1.0"
-authors = ["Gao Bicheng <volz.kz.g@gmail.com>"]
+authors = ["yubo<yubo@cryptape.com>"]
 
 [dependencies]
-bn-plus = "0.4.4"
+bn = "0.4.3"
 rand = "0.4"

@@ -1,4 +1,4 @@
-use bn::{pairing, Fr, G1, G2, Group};
+use bn::{pairing, Fr, Group, G1, G2};
 use public::MessagePool;
 use rand::Rng;
 

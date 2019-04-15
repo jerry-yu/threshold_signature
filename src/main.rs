@@ -2,14 +2,14 @@ extern crate bn;
 extern crate rand;
 extern crate threshold_signature;
 
-use bn::{G1, Group};
+use bn::{Group, G1};
 use rand::Rng;
-use threshold_signature::user::Client;
 use std::time::Instant;
+use threshold_signature::user::Client;
 
 fn main() {
-    let n: usize = 7;
-    let t: usize = 4;
+    let n: usize = 4;
+    let t: usize = 3;
     let rng = &mut rand::thread_rng();
     // create the vector of n users
     let mut clients = Vec::new();
@@ -31,12 +31,12 @@ fn main() {
             }
             let coef = clients[j].calc_coef_g2();
             {
-                println!("calc coef g2 time {:?}",Instant::now()-stime);
+                println!("calc coef g2 time {:?}", Instant::now() - stime);
                 stime = Instant::now();
             }
             let sec = clients[j].calc_secret(clients[i].id);
             {
-                println!("calc_secret time {:?}",Instant::now()-stime);
+                println!("calc_secret time {:?}", Instant::now() - stime);
                 stime = Instant::now();
             }
 
@@ -58,7 +58,7 @@ fn main() {
                 println!("verify error src {} dst {}", clients[i].id, clients[j].id);
             }
             {
-                println!("verify time {:?}",Instant::now()-stime);
+                println!("verify time {:?}", Instant::now() - stime);
                 stime = Instant::now();
             }
         }
@@ -75,7 +75,7 @@ fn main() {
         }
         clients[i].calc_pk_sk();
         {
-            println!("calc_pk_sk time {:?}",Instant::now()-stime);
+            println!("calc_pk_sk time {:?}", Instant::now() - stime);
             stime = Instant::now();
         }
     }
@@ -99,11 +99,9 @@ fn main() {
                 println!("eroor in verify signature from id {}", clients[i].id);
             }
             {
-                println!("verify_single_signature time {:?}",Instant::now()-stime);
+                println!("verify_single_signature time {:?}", Instant::now() - stime);
                 stime = Instant::now();
             }
-        } else {
-            println!("***** err in cal signature id {}", clients[i].id);
         }
     }
 
@@ -121,17 +119,19 @@ fn main() {
 
     let mut rhs = G1::zero();
     let mut lhs = G1::zero();
-    {
-        stime = Instant::now();
-    }
     for i in 0..t {
+        {
+            stime = Instant::now();
+        }
         lhs = lhs + left_sigs[i] * Client::calc_lambda(0, t, i, &left_ids);
-    }
-    {
-        println!("calc_two_lambda time {:?}",Instant::now()-stime);
-    }
-    for i in 0..t {
+        {
+            println!("calc_lambda time {:?}", Instant::now() - stime);
+            stime = Instant::now();
+        }
         rhs = rhs + right_sigs[i] * Client::calc_lambda(0, t, i, &right_ids);
+        {
+            println!("calc_lambda time {:?}", Instant::now() - stime);
+        }
     }
     assert!(lhs == rhs);
 
@@ -144,14 +144,17 @@ fn main() {
         println!("verify completed signature not ok");
     }
     {
-        println!("verify_completed_signature time {:?}",Instant::now()-stime);
+        println!(
+            "verify_completed_signature time {:?}",
+            Instant::now() - stime
+        );
         stime = Instant::now();
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use bn::{pairing, Fr, G1, G2, Group};
+    use bn::{pairing, Fr, Group, G1, G2};
     use rand;
 
     #[test]
