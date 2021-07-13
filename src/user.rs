@@ -10,14 +10,14 @@ pub struct Polynomial {
 impl Polynomial {
     pub fn new(order: usize) -> Polynomial {
         Polynomial {
-            order: order,
+            order,
             coef: Polynomial::coef_gen(order),
         }
     }
 
     pub fn coef_gen(order: usize) -> Vec<Fr> {
         let mut ret = Vec::new();
-        let rng = &mut ::rand::thread_rng();
+        //let rng = &mut ::rand::thread_rng();
         for _ in 0..order {
             //ret.push(Fr::random(rng));
             ret.push(Fr::one());

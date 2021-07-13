@@ -19,7 +19,7 @@ fn main() {
     }
     println!("client push ok ");
 
-    let mut stime = Instant::now();
+    let mut stime; 
     for i in 0..n {
         for j in 0..n {
             if i == j {
@@ -37,7 +37,7 @@ fn main() {
             let sec = clients[j].calc_secret(clients[i].id);
             {
                 println!("calc_secret time {:?}", Instant::now() - stime);
-                stime = Instant::now();
+               // stime = Instant::now();
             }
 
             if !clients[i].set_client_id_coefs(id, &coef) {
@@ -59,7 +59,7 @@ fn main() {
             }
             {
                 println!("verify time {:?}", Instant::now() - stime);
-                stime = Instant::now();
+                //stime = Instant::now();
             }
         }
     }
@@ -76,7 +76,7 @@ fn main() {
         clients[i].calc_pk_sk();
         {
             println!("calc_pk_sk time {:?}", Instant::now() - stime);
-            stime = Instant::now();
+            //stime = Instant::now();
         }
     }
 
@@ -100,7 +100,7 @@ fn main() {
             }
             {
                 println!("verify_single_signature time {:?}", Instant::now() - stime);
-                stime = Instant::now();
+                //stime = Instant::now();
             }
         }
     }
@@ -148,7 +148,7 @@ fn main() {
             "verify_completed_signature time {:?}",
             Instant::now() - stime
         );
-        stime = Instant::now();
+        //stime = Instant::now();
     }
 }
 

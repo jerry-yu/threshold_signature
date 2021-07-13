@@ -20,9 +20,9 @@ impl MessagePool {
             userid_poly_secrets: BTreeMap::new(),
             qual_usr: Vec::new(),
             whole_coefs: Vec::new(),
-            my_id: my_id,
-            n: n,
-            t: t,
+            my_id,
+            n,
+            t,
         }
     }
 
@@ -33,14 +33,14 @@ impl MessagePool {
         Some(self.whole_coefs[0])
     }
 
-    pub fn set_client_id_coefs(&mut self, src_id: i32, coefs: &Vec<G2>) -> bool {
+    pub fn set_client_id_coefs(&mut self, src_id: i32, coefs: &[G2]) -> bool {
         if coefs.len() != self.t {
             println!("not right");
             return false;
         }
         let ret = self
             .userid_coefs_g2
-            .insert(src_id, coefs.clone())
+            .insert(src_id, coefs.to_vec())
             .map_or_else(|| true, |_| false);
         ret
     }
