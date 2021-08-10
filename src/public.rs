@@ -38,11 +38,9 @@ impl MessagePool {
             println!("not right");
             return false;
         }
-        let ret = self
-            .userid_coefs_g2
+        self.userid_coefs_g2
             .insert(src_id, coefs.to_vec())
-            .map_or_else(|| true, |_| false);
-        ret
+            .map_or_else(|| true, |_| false)
     }
 
     pub fn set_client_id_secrets(&mut self, src_id: i32, secret: Fr) -> bool {
@@ -54,18 +52,19 @@ impl MessagePool {
     /*verify $id's secret is ok or not via coefs_g2 */
     pub fn verify(&self, id: i32) -> bool {
         let ret = self.userid_poly_secrets.get(&id).and_then(|secret| {
-            self.userid_coefs_g2.get(&id).and_then(|coefs| {
+            self.userid_coefs_g2.get(&id).map(|coefs| {
                 let lhs = G2::one() * *secret;
                 let mut rhs = G2::zero();
 
                 let s: String = self.my_id.to_string();
                 let j_fr: Fr = Fr::from_str(&s).unwrap();
                 let mut jk: Fr = Fr::one();
-                for k in 0..self.t {
-                    rhs = rhs + coefs[k] * jk;
+
+                for item in coefs.iter().take(self.t) {
+                    rhs = rhs + *item * jk;
                     jk = jk * j_fr;
                 }
-                Some(lhs == rhs)
+                lhs == rhs
             })
         });
         ret.unwrap_or(false)
@@ -117,7 +116,7 @@ impl MessagePool {
                 self.clean_unqual_id(*i);
             }
         }
-        return self.qual_usr.clone();
+        self.qual_usr.clone()
     }
 
     pub fn calc_whole_coefs(&mut self) -> bool {
@@ -125,7 +124,7 @@ impl MessagePool {
         for k in 0..self.t {
             let mut ret = G2::zero();
             for i in self.qual_usr.iter() {
-                if let Some(coefs) = self.userid_coefs_g2.get(&i) {
+                if let Some(coefs) = self.userid_coefs_g2.get(i) {
                     ret = ret + coefs[k];
                 } else {
                     println!("error for not find id coefs in id {}", i);

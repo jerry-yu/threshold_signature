@@ -19,7 +19,7 @@ fn main() {
     }
     println!("client push ok ");
 
-    let mut stime; 
+    let mut stime;
     for i in 0..n {
         for j in 0..n {
             if i == j {
@@ -37,7 +37,7 @@ fn main() {
             let sec = clients[j].calc_secret(clients[i].id);
             {
                 println!("calc_secret time {:?}", Instant::now() - stime);
-               // stime = Instant::now();
+                // stime = Instant::now();
             }
 
             if !clients[i].set_client_id_coefs(id, &coef) {
@@ -64,16 +64,16 @@ fn main() {
         }
     }
 
-    for i in 0..n {
-        let qual_user = clients[i].get_qual_usr();
-        println!(" id {}'s qual users {:?}", clients[i].id, qual_user);
+    for item in clients.iter_mut().take(n) {
+        let qual_user = item.get_qual_usr();
+        println!(" id {}'s qual users {:?}", item.id, qual_user);
     }
 
-    for i in 0..n {
+    for item in clients.iter_mut().take(n) {
         {
             stime = Instant::now();
         }
-        clients[i].calc_pk_sk();
+        item.calc_pk_sk();
         {
             println!("calc_pk_sk time {:?}", Instant::now() - stime);
             //stime = Instant::now();

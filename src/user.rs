@@ -60,7 +60,7 @@ impl Client {
         Some(new_cli)
     }
 
-    pub fn set_client_id_coefs(&mut self, src_id: i32, coefs: &Vec<G2>) -> bool {
+    pub fn set_client_id_coefs(&mut self, src_id: i32, coefs: &[G2]) -> bool {
         self.msg_pool.set_client_id_coefs(src_id, coefs)
     }
 
@@ -107,7 +107,7 @@ impl Client {
     }
 
     pub fn calc_signature(&self, hashed_message: &G1) -> Option<G1> {
-        self.sk.and_then(|sk| Some(*hashed_message * sk))
+        self.sk.map(|sk| *hashed_message * sk)
     }
 
     pub fn verify_single_signature(&self, signer_id: i32, hashed_message: &G1, sig: &G1) -> bool {
@@ -124,16 +124,17 @@ impl Client {
         )
     }
 
-    pub fn calc_lambda(st: usize, ed: usize, exc: usize, ids: &Vec<i32>) -> Fr {
+    pub fn calc_lambda(st: usize, ed: usize, exc: usize, ids: &[i32]) -> Fr {
         let mut up = Fr::one();
         let mut down = Fr::one();
 
         let i = ids[exc];
-        for k in st..ed {
+
+        for (k, item) in ids.iter().enumerate().take(ed).skip(st) {
             if k == exc {
                 continue;
             }
-            let j = ids[k];
+            let j = item;
             // up
             let mut res = 0 - j;
             if res >= 0 {
