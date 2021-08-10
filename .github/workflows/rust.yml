@@ -2,9 +2,9 @@ name: Rust-check
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master,main,'v*' ]
   pull_request:
-    branches: [ master ]
+    branches: [ master,main,'v*' ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -63,5 +63,3 @@ jobs:
       # test all
       - name: "test --all"
         run: cargo test --all
-
-  
